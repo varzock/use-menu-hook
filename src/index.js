@@ -104,6 +104,7 @@ const useMenu = (userProps) => {
     Escape(event) {
       event.preventDefault();
       dispatch({ type: changeTypes.ItemKeyDownEscape, id });
+      dispatch({ type: changeTypes.ClearActiveMousePath, id });
     },
     Space() {
       dispatch({ type: changeTypes.ItemKeyDownSpace, id });
@@ -134,6 +135,9 @@ const useMenu = (userProps) => {
     },
     Enter() {
       dispatch({ type: changeTypes.ButtonKeyDownEnter, id });
+    },
+    Escape() {
+      dispatch({ type: changeTypes.ClearActiveMousePath, id });
     },
   });
 

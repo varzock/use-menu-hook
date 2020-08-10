@@ -502,6 +502,10 @@ var useMenu = function useMenu(userProps) {
           type: ItemKeyDownEscape,
           id: id
         });
+        dispatch({
+          type: ClearActiveMousePath,
+          id: id
+        });
       },
       Space: function Space() {
         dispatch({
@@ -553,6 +557,12 @@ var useMenu = function useMenu(userProps) {
       Enter: function Enter() {
         dispatch({
           type: ButtonKeyDownEnter,
+          id: id
+        });
+      },
+      Escape: function Escape() {
+        dispatch({
+          type: ClearActiveMousePath,
           id: id
         });
       }
