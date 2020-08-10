@@ -21,7 +21,7 @@ const useMenu = userProps => {
     },
   );
 
-  const isFocussed = id => {
+  const isFocused = id => {
     return activeKeyPath === paths.find(test(`${id}$`));
   };
 
@@ -87,23 +87,8 @@ const useMenu = userProps => {
     dispatch({ type: changeTypes.ClearActiveMousePath, id });
   };
 
-  const buttonHandleMouseEnter = id => () => {
-    dispatch({ type: changeTypes.SetActiveMousePath, id });
-  };
-
   const itemHandleBlur = id => () => {
     dispatch({ type: changeTypes.ItemBlur, id });
-  };
-
-  const buttonHandleMouseLeave = id => event => {
-    const menu = document.querySelector(`[aria-labelledby=${id}]`);
-    if (
-      !menu ||
-      !(event.relatedTarget instanceof HTMLElement) ||
-      (menu !== event.relatedTarget && !menu.contains(event.relatedTarget))
-    ) {
-      dispatch({ type: changeTypes.ClearActiveMousePath, id });
-    }
   };
 
   const buttonKeyDownhandlers = id => ({
@@ -137,11 +122,9 @@ const useMenu = userProps => {
       ...p,
       id,
       role: 'menuitem',
-      tabIndex: isFocussed(id) ? 0 : -1,
+      tabIndex: isFocused(id) ? 0 : -1,
       onKeyDown: handleKey(itemKeyDownHandlers(id)),
       onClick: buttonHandleClick(id),
-      onMouseEnter: buttonHandleMouseEnter(id),
-      onMouseLeave: buttonHandleMouseLeave(id),
       onBlur: itemHandleBlur(id),
     };
 
@@ -174,8 +157,6 @@ const useMenu = userProps => {
       'aria-expanded': isExpanded(id),
       onKeyDown: handleKey(buttonKeyDownhandlers(id)),
       onClick: buttonHandleClick(id),
-      onMouseEnter: buttonHandleMouseEnter(id),
-      onMouseLeave: buttonHandleMouseLeave(id),
     };
   };
 
@@ -194,7 +175,7 @@ const useMenu = userProps => {
     getMenuItemProps,
     getMenuButtonProps,
     getMenuProps,
-    isFocussed,
+    isFocused,
     isExpanded,
   };
 };

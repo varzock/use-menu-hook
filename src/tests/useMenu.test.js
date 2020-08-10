@@ -4,7 +4,7 @@ describe('useMenu', () => {
   describe('hook props', () => {
     it('provides helper functions', () => {
       const {result} = setupHook();
-      expect(result.current.isFocussed).toBeInstanceOf(Function)
+      expect(result.current.isFocused).toBeInstanceOf(Function)
       expect(result.current.isExpanded).toBeInstanceOf(Function)
     });
 
