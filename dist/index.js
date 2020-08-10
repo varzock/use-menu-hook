@@ -397,6 +397,25 @@ var useMenu = function useMenu(userProps) {
   var isExpanded = function isExpanded(id) {
     return !!(activeKeyPath.match("".concat(id, "/")) || activeMousePath.match(id));
   };
+  /**
+   * Detects whether user clicked outside the menu in which case we close the whole menu.
+   * @param event
+   */
+
+
+  var handleClickOutside = function handleClickOutside(event) {
+    if (!buttonRef) return;
+    var id = buttonRef.current.getAttribute('id'); // Check also for the associated menu. Otherwise the menu would be closed when you try to click on it.
+
+    var menu = document.querySelector("[aria-labelledby=\"".concat(id, "\"]"));
+
+    if (!buttonRef.current.contains(event.target) && !menu.contains(event.target)) {
+      dispatch({
+        type: ClearActiveMousePath,
+        id: id
+      });
+    }
+  };
 
   react.useEffect(function () {
     var el = buttonRef.current;
@@ -414,7 +433,13 @@ var useMenu = function useMenu(userProps) {
       dispatch({
         type: SetPaths,
         paths: _paths
-      });
+      }); // Add eventlistener that checks if clicked outside the menubutton or menu.
+
+      document.addEventListener('click', handleClickOutside); // Remove the eventlistener
+
+      return function () {
+        document.removeEventListener('click', handleClickOutside);
+      };
     }
   }, []);
   react.useEffect(function () {
@@ -487,10 +512,10 @@ var useMenu = function useMenu(userProps) {
     };
   };
 
-  var buttonHandleClick = function buttonHandleClick(id) {
-    return function () {
+  var buttonHandleMenuClick = function buttonHandleMenuClick(id) {
+    return function (event) {
       dispatch({
-        type: ClearActiveMousePath,
+        type: SetActiveMousePath,
         id: id
       });
     };
@@ -560,7 +585,7 @@ var useMenu = function useMenu(userProps) {
       role: 'menuitem',
       tabIndex: isFocused(id) ? 0 : -1,
       onKeyDown: handleKey(itemKeyDownHandlers(id)),
-      onClick: buttonHandleClick(id),
+      onClick: buttonHandleMenuClick(id),
       onBlur: itemHandleBlur(id)
     });
 
@@ -596,7 +621,7 @@ var useMenu = function useMenu(userProps) {
       'aria-haspopup': true,
       'aria-expanded': isExpanded(id),
       onKeyDown: handleKey(buttonKeyDownhandlers(id)),
-      onClick: buttonHandleClick(id)
+      onClick: buttonHandleMenuClick(id)
     });
   };
 

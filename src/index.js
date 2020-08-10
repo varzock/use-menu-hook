@@ -9,7 +9,7 @@ const defaultProps = {
   activeMousePath: '',
 };
 
-const useMenu = userProps => {
+const useMenu = (userProps) => {
   const buttonRef = useRef();
   const props = { ...defaultProps, ...userProps };
   const [{ paths, activeKeyPath, activeMousePath }, dispatch] = useReducer(
@@ -21,12 +21,31 @@ const useMenu = userProps => {
     },
   );
 
-  const isFocused = id => {
+  const isFocused = (id) => {
     return activeKeyPath === paths.find(test(`${id}$`));
   };
 
-  const isExpanded = id => {
+  const isExpanded = (id) => {
     return !!(activeKeyPath.match(`${id}/`) || activeMousePath.match(id));
+  };
+
+  /**
+   * Detects whether user clicked outside the menu in which case we close the whole menu.
+   * @param event
+   */
+  const handleClickOutside = (event) => {
+    if (!buttonRef) return;
+
+    const id = buttonRef.current.getAttribute('id');
+    // Check also for the associated menu. Otherwise the menu would be closed when you try to click on it.
+    const menu = document.querySelector(`[aria-labelledby="${id}"]`);
+
+    if (
+      !buttonRef.current.contains(event.target) &&
+      !menu.contains(event.target)
+    ) {
+      dispatch({ type: changeTypes.ClearActiveMousePath, id });
+    }
   };
 
   useEffect(() => {
@@ -36,10 +55,18 @@ const useMenu = userProps => {
       const id = el.getAttribute('id');
       paths.push(getPathFromElement(el));
       const root = document.querySelector(`[aria-labelledby="${id}"]`);
-      Array.from(root.querySelectorAll('[role="menuitem"]')).forEach(x => {
+      Array.from(root.querySelectorAll('[role="menuitem"]')).forEach((x) => {
         paths.push(getPathFromElement(x));
       });
       dispatch({ type: changeTypes.SetPaths, paths });
+
+      // Add eventlistener that checks if clicked outside the menubutton or menu.
+      document.addEventListener('click', handleClickOutside);
+
+      // Remove the eventlistener
+      return () => {
+        document.removeEventListener('click', handleClickOutside);
+      };
     }
   }, []);
 
@@ -52,7 +79,7 @@ const useMenu = userProps => {
     }
   }, [activeKeyPath]);
 
-  const itemKeyDownHandlers = id => ({
+  const itemKeyDownHandlers = (id) => ({
     ArrowDown() {
       dispatch({ type: changeTypes.ItemKeyDownArrowDown, id });
     },
@@ -83,15 +110,19 @@ const useMenu = userProps => {
     },
   });
 
-  const buttonHandleClick = id => () => {
+  const buttonHandleClick = (id) => () => {
     dispatch({ type: changeTypes.ClearActiveMousePath, id });
   };
 
-  const itemHandleBlur = id => () => {
+  const buttonHandleMenuClick = (id) => (event) => {
+    dispatch({ type: changeTypes.SetActiveMousePath, id });
+  };
+
+  const itemHandleBlur = (id) => () => {
     dispatch({ type: changeTypes.ItemBlur, id });
   };
 
-  const buttonKeyDownhandlers = id => ({
+  const buttonKeyDownhandlers = (id) => ({
     ArrowDown() {
       dispatch({ type: changeTypes.ButtonKeyDownArrowDown, id });
     },
@@ -106,7 +137,7 @@ const useMenu = userProps => {
     },
   });
 
-  const handleKey = handlers => event => {
+  const handleKey = (handlers) => (event) => {
     const key = normalizeKeys(event.key);
     if (handlers[key]) {
       handlers[key](event);
@@ -124,7 +155,7 @@ const useMenu = userProps => {
       role: 'menuitem',
       tabIndex: isFocused(id) ? 0 : -1,
       onKeyDown: handleKey(itemKeyDownHandlers(id)),
-      onClick: buttonHandleClick(id),
+      onClick: buttonHandleMenuClick(id),
       onBlur: itemHandleBlur(id),
     };
 
@@ -147,7 +178,7 @@ const useMenu = userProps => {
     return {
       id,
       ...itemProps,
-      ref: c => {
+      ref: (c) => {
         buttonRef.current = c;
         if (itemProps.ref) {
           itemProps.ref(c);
@@ -156,7 +187,7 @@ const useMenu = userProps => {
       'aria-haspopup': true,
       'aria-expanded': isExpanded(id),
       onKeyDown: handleKey(buttonKeyDownhandlers(id)),
-      onClick: buttonHandleClick(id),
+      onClick: buttonHandleMenuClick(id),
     };
   };
 
