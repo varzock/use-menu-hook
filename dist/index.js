@@ -398,23 +398,28 @@ var useMenu = function useMenu(userProps) {
     return !!(activeKeyPath.match("".concat(id, "/")) || activeMousePath.match(id));
   };
   /**
+   * Is the event target outside menu?
+   * @param eventTarget
+   * @returns {boolean|boolean}
+   */
+
+
+  var isOutsideMenu = function isOutsideMenu(eventTarget) {
+    if (!buttonRef) return true;
+    var id = buttonRef.current.getAttribute('id'); // Check also for the associated menu. Otherwise the menu would be closed when you try to click on it.
+
+    var menu = document.querySelector("[aria-labelledby=\"".concat(id, "\"]")); // console.log('is outside?', event, !buttonRef.current.contains(event.target) && !menu.contains(event.target));
+
+    return !buttonRef.current.contains(eventTarget) && !menu.contains(eventTarget);
+  };
+  /**
    * Detects whether user clicked outside the menu in which case we close the whole menu.
    * @param event
    */
 
 
   var handleClickOutside = function handleClickOutside(event) {
-    if (!buttonRef) return;
-    var id = buttonRef.current.getAttribute('id'); // Check also for the associated menu. Otherwise the menu would be closed when you try to click on it.
-
-    var menu = document.querySelector("[aria-labelledby=\"".concat(id, "\"]"));
-
-    if (!buttonRef.current.contains(event.target) && !menu.contains(event.target)) {
-      dispatch({
-        type: ClearActiveMousePath,
-        id: id
-      });
-    }
+    return isOutsideMenu(event.target);
   };
 
   react.useEffect(function () {
@@ -526,11 +531,30 @@ var useMenu = function useMenu(userProps) {
   };
 
   var itemHandleBlur = function itemHandleBlur(id) {
-    return function () {
+    return function (event) {
       dispatch({
         type: ItemBlur,
         id: id
-      });
+      }); // With blur we need to check on activeElement instead of event.target
+
+      if (isOutsideMenu(document.activeElement)) {
+        dispatch({
+          type: ClearActiveMousePath,
+          id: id
+        });
+      }
+    };
+  };
+
+  var menuHandleBlur = function menuHandleBlur(id) {
+    return function (event) {
+      // With blur we need to check on activeElement instead of event.target
+      if (isOutsideMenu(document.activeElement)) {
+        dispatch({
+          type: ClearActiveMousePath,
+          id: id
+        });
+      }
     };
   };
 
@@ -561,6 +585,10 @@ var useMenu = function useMenu(userProps) {
         });
       },
       Escape: function Escape() {
+        dispatch({
+          type: ItemBlur,
+          id: id
+        });
         dispatch({
           type: ClearActiveMousePath,
           id: id
@@ -631,7 +659,8 @@ var useMenu = function useMenu(userProps) {
       'aria-haspopup': true,
       'aria-expanded': isExpanded(id),
       onKeyDown: handleKey(buttonKeyDownhandlers(id)),
-      onClick: buttonHandleMenuClick(id)
+      onClick: buttonHandleMenuClick(id),
+      onBlur: menuHandleBlur(id)
     });
   };
 
