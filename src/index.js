@@ -41,7 +41,6 @@ const useMenu = (userProps) => {
     // Check also for the associated menu. Otherwise the menu would be closed when you try to click on it.
     const menu = document.querySelector(`[aria-labelledby="${id}"]`);
 
-    // console.log('is outside?', event, !buttonRef.current.contains(event.target) && !menu.contains(event.target));
     return (
       !buttonRef.current.contains(eventTarget) && !menu.contains(eventTarget)
     );
@@ -51,7 +50,14 @@ const useMenu = (userProps) => {
    * Detects whether user clicked outside the menu in which case we close the whole menu.
    * @param event
    */
-  const handleClickOutside = (event) => isOutsideMenu(event.target);
+  const handleClickOutside = (event) => {
+    const id = buttonRef.current.getAttribute('id');
+
+    if (id && isOutsideMenu(event.target)) {
+      dispatch({ type: changeTypes.ItemBlur, id });
+      dispatch({ type: changeTypes.ClearActiveMousePath, id });
+    }
+  };
 
   useEffect(() => {
     const el = buttonRef.current;
@@ -116,7 +122,7 @@ const useMenu = (userProps) => {
     },
   });
 
-  const buttonHandleMenuClick = (id) => (event) => {
+  const buttonHandleMenuClick = (id) => () => {
     dispatch({ type: changeTypes.SetActiveMousePath, id });
   };
 
@@ -124,14 +130,14 @@ const useMenu = (userProps) => {
     dispatch({ type: changeTypes.ItemBlur, id });
 
     // With blur we need to check on activeElement instead of event.target
-    if (isOutsideMenu(document.activeElement)) {
+    if (isOutsideMenu(event.target)) {
       dispatch({ type: changeTypes.ClearActiveMousePath, id });
     }
   };
 
   const menuHandleBlur = (id) => (event) => {
     // With blur we need to check on activeElement instead of event.target
-    if (isOutsideMenu(document.activeElement)) {
+    if (isOutsideMenu(event.target)) {
       dispatch({ type: changeTypes.ClearActiveMousePath, id });
     }
   };
